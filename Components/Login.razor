@@ -8,7 +8,7 @@
                @bind:event="oninput"
                @onkeypress="HandleKeyPress"
                placeholder="請輸入家庭暗號" />
-        <button class="btn btn-primary" @onclick="Login" disabled="@isLoading">
+        <button class="btn btn-primary" @onclick="HandleLogin" disabled="@isLoading">
             @if (isLoading)
             {
                 <span>登入中...</span>
@@ -34,11 +34,11 @@
     {
         if (e.Key == "Enter")
         {
-            await Login();
+            await HandleLogin();
         }
     }
 
-    private async Task Login()
+    private async Task HandleLogin()
     {
         if (string.IsNullOrWhiteSpace(password))
         {
