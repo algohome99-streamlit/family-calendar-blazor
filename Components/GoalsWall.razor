@@ -43,7 +43,13 @@
     }
 
     <div class="card" style="margin-top: 1rem;">
-        <h3>@(editingGoal != null ? "✏️ 編輯目標" : "➕ 新增目標")</h3>
+        <div class="card-header-collapsible" @onclick="ToggleFormExpand">
+            <h3>@(editingGoal != null ? "✏️ 編輯目標" : "➕ 新增目標")</h3>
+            <span class="collapse-icon">@(isFormExpanded ? "▼" : "▶")</span>
+        </div>
+
+        @if (isFormExpanded)
+        {
         <div class="form-row">
             <div class="form-group">
                 <label>成員</label>
@@ -100,12 +106,36 @@
                 <button class="btn" @onclick="CancelEdit">取消</button>
             }
         </div>
+        }
     </div>
 </div>
+
+<style>
+    .card-header-collapsible {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        padding: 0.5rem 0;
+    }
+    .card-header-collapsible:hover {
+        opacity: 0.8;
+    }
+    .card-header-collapsible h3 {
+        margin: 0;
+    }
+    .collapse-icon {
+        font-size: 0.9rem;
+        color: #666;
+    }
+</style>
 
 @code {
     private List<Goal> goals = new();
     private Goal? editingGoal = null;
+    private bool isFormExpanded = false;
+
+    private void ToggleFormExpand() => isFormExpanded = !isFormExpanded;
 
     private string formMember = "哥哥";
     private string formGoalName = "";
@@ -139,6 +169,7 @@
         formSub2Pct = goal.Sub2Pct;
         formSub3 = goal.Sub3;
         formSub3Pct = goal.Sub3Pct;
+        isFormExpanded = true; // 編輯時自動展開
     }
 
     private void CancelEdit()

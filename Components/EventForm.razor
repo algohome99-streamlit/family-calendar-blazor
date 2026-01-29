@@ -1,7 +1,13 @@
 @inject IDataService DataService
 
 <div class="card">
-    <h3>@(IsEdit ? "✏️ 編輯行程" : "✨ 新增行程")</h3>
+    <div class="card-header-collapsible" @onclick="ToggleExpand">
+        <h3>@(IsEdit ? "✏️ 編輯行程" : "✨ 新增行程")</h3>
+        <span class="collapse-icon">@(isExpanded ? "▼" : "▶")</span>
+    </div>
+
+    @if (isExpanded)
+    {
     <div class="form-row">
         <div class="form-group">
             <label>日期</label>
@@ -46,7 +52,28 @@
             <button class="btn" @onclick="Cancel">取消</button>
         }
     </div>
+    }
 </div>
+
+<style>
+    .card-header-collapsible {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        padding: 0.5rem 0;
+    }
+    .card-header-collapsible:hover {
+        opacity: 0.8;
+    }
+    .card-header-collapsible h3 {
+        margin: 0;
+    }
+    .collapse-icon {
+        font-size: 0.9rem;
+        color: #666;
+    }
+</style>
 
 @code {
     [Parameter] public Event? EditingEvent { get; set; }
@@ -59,8 +86,11 @@
     private string formContent = "";
     private string formRecurring = "";
     private bool isLoading = false;
+    private bool isExpanded = false;
 
     private bool IsEdit => EditingEvent != null;
+
+    private void ToggleExpand() => isExpanded = !isExpanded;
 
     protected override void OnParametersSet()
     {
@@ -71,6 +101,7 @@
             formType = EditingEvent.Type;
             formContent = EditingEvent.Content;
             formRecurring = EditingEvent.Recurring;
+            isExpanded = true; // 編輯時自動展開
         }
         else
         {

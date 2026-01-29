@@ -24,52 +24,43 @@ public class DataService : IDataService
 
     public async Task AddEventAsync(Event evt)
     {
-        var payload = new
-        {
-            action = "addEvent",
-            date = evt.Date.ToString("yyyy-MM-dd"),
-            member = evt.Member,
-            content = evt.Content,
-            type = evt.Type,
-            recurring = evt.Recurring
-        };
-        await _httpClient.PostAsJsonAsync(_gasUrl, payload);
+        var url = $"{_gasUrl}?action=addEvent" +
+            $"&date={Uri.EscapeDataString(evt.Date.ToString("yyyy-MM-dd"))}" +
+            $"&member={Uri.EscapeDataString(evt.Member)}" +
+            $"&content={Uri.EscapeDataString(evt.Content)}" +
+            $"&type={Uri.EscapeDataString(evt.Type)}" +
+            $"&recurring={Uri.EscapeDataString(evt.Recurring)}";
+        await _httpClient.GetAsync(url);
     }
 
     public async Task UpdateEventAsync(Event evt)
     {
-        var payload = new
-        {
-            action = "updateEvent",
-            rowIndex = evt.RowIndex,
-            date = evt.Date.ToString("yyyy-MM-dd"),
-            member = evt.Member,
-            content = evt.Content,
-            type = evt.Type,
-            recurring = evt.Recurring
-        };
-        await _httpClient.PostAsJsonAsync(_gasUrl, payload);
+        var url = $"{_gasUrl}?action=updateEvent" +
+            $"&rowIndex={evt.RowIndex}" +
+            $"&date={Uri.EscapeDataString(evt.Date.ToString("yyyy-MM-dd"))}" +
+            $"&member={Uri.EscapeDataString(evt.Member)}" +
+            $"&content={Uri.EscapeDataString(evt.Content)}" +
+            $"&type={Uri.EscapeDataString(evt.Type)}" +
+            $"&recurring={Uri.EscapeDataString(evt.Recurring)}";
+        await _httpClient.GetAsync(url);
     }
 
     public async Task DeleteEventAsync(int rowIndex)
     {
-        var payload = new { action = "deleteEvent", rowIndex };
-        await _httpClient.PostAsJsonAsync(_gasUrl, payload);
+        var url = $"{_gasUrl}?action=deleteEvent&rowIndex={rowIndex}";
+        await _httpClient.GetAsync(url);
     }
 
     public async Task CompleteEventAsync(Event evt)
     {
-        var payload = new
-        {
-            action = "completeEvent",
-            rowIndex = evt.RowIndex,
-            date = evt.Date.ToString("yyyy-MM-dd"),
-            member = evt.Member,
-            content = evt.Content,
-            type = evt.Type,
-            recurring = evt.Recurring
-        };
-        await _httpClient.PostAsJsonAsync(_gasUrl, payload);
+        var url = $"{_gasUrl}?action=completeEvent" +
+            $"&rowIndex={evt.RowIndex}" +
+            $"&date={Uri.EscapeDataString(evt.Date.ToString("yyyy-MM-dd"))}" +
+            $"&member={Uri.EscapeDataString(evt.Member)}" +
+            $"&content={Uri.EscapeDataString(evt.Content)}" +
+            $"&type={Uri.EscapeDataString(evt.Type)}" +
+            $"&recurring={Uri.EscapeDataString(evt.Recurring)}";
+        await _httpClient.GetAsync(url);
     }
 
     // === Goals ===
@@ -81,57 +72,48 @@ public class DataService : IDataService
 
     public async Task AddGoalAsync(Goal goal)
     {
-        var payload = new
-        {
-            action = "addGoal",
-            member = goal.Member,
-            goal = goal.GoalName,
-            deadline = goal.Deadline.ToString("yyyy-MM-dd"),
-            sub1 = goal.Sub1,
-            sub1_pct = goal.Sub1Pct,
-            sub2 = goal.Sub2,
-            sub2_pct = goal.Sub2Pct,
-            sub3 = goal.Sub3,
-            sub3_pct = goal.Sub3Pct
-        };
-        await _httpClient.PostAsJsonAsync(_gasUrl, payload);
+        var url = $"{_gasUrl}?action=addGoal" +
+            $"&member={Uri.EscapeDataString(goal.Member)}" +
+            $"&goal={Uri.EscapeDataString(goal.GoalName)}" +
+            $"&deadline={Uri.EscapeDataString(goal.Deadline.ToString("yyyy-MM-dd"))}" +
+            $"&sub1={Uri.EscapeDataString(goal.Sub1)}" +
+            $"&sub1_pct={goal.Sub1Pct}" +
+            $"&sub2={Uri.EscapeDataString(goal.Sub2)}" +
+            $"&sub2_pct={goal.Sub2Pct}" +
+            $"&sub3={Uri.EscapeDataString(goal.Sub3)}" +
+            $"&sub3_pct={goal.Sub3Pct}";
+        await _httpClient.GetAsync(url);
     }
 
     public async Task UpdateGoalAsync(Goal goal)
     {
-        var payload = new
-        {
-            action = "updateGoal",
-            rowIndex = goal.RowIndex,
-            member = goal.Member,
-            goal = goal.GoalName,
-            deadline = goal.Deadline.ToString("yyyy-MM-dd"),
-            sub1 = goal.Sub1,
-            sub1_pct = goal.Sub1Pct,
-            sub2 = goal.Sub2,
-            sub2_pct = goal.Sub2Pct,
-            sub3 = goal.Sub3,
-            sub3_pct = goal.Sub3Pct
-        };
-        await _httpClient.PostAsJsonAsync(_gasUrl, payload);
+        var url = $"{_gasUrl}?action=updateGoal" +
+            $"&rowIndex={goal.RowIndex}" +
+            $"&member={Uri.EscapeDataString(goal.Member)}" +
+            $"&goal={Uri.EscapeDataString(goal.GoalName)}" +
+            $"&deadline={Uri.EscapeDataString(goal.Deadline.ToString("yyyy-MM-dd"))}" +
+            $"&sub1={Uri.EscapeDataString(goal.Sub1)}" +
+            $"&sub1_pct={goal.Sub1Pct}" +
+            $"&sub2={Uri.EscapeDataString(goal.Sub2)}" +
+            $"&sub2_pct={goal.Sub2Pct}" +
+            $"&sub3={Uri.EscapeDataString(goal.Sub3)}" +
+            $"&sub3_pct={goal.Sub3Pct}";
+        await _httpClient.GetAsync(url);
     }
 
     public async Task DeleteGoalAsync(int rowIndex)
     {
-        var payload = new { action = "deleteGoal", rowIndex };
-        await _httpClient.PostAsJsonAsync(_gasUrl, payload);
+        var url = $"{_gasUrl}?action=deleteGoal&rowIndex={rowIndex}";
+        await _httpClient.GetAsync(url);
     }
 
     public async Task CompleteGoalAsync(Goal goal)
     {
-        var payload = new
-        {
-            action = "completeGoal",
-            rowIndex = goal.RowIndex,
-            member = goal.Member,
-            goal = goal.GoalName
-        };
-        await _httpClient.PostAsJsonAsync(_gasUrl, payload);
+        var url = $"{_gasUrl}?action=completeGoal" +
+            $"&rowIndex={goal.RowIndex}" +
+            $"&member={Uri.EscapeDataString(goal.Member)}" +
+            $"&goal={Uri.EscapeDataString(goal.GoalName)}";
+        await _httpClient.GetAsync(url);
     }
 
     // === History ===
