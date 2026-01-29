@@ -10,13 +10,13 @@
 
     <!-- 頁籤 -->
     <div class="tabs">
-        <button class="tab @(activeTab == "cards" ? "active" : "")" @onclick="() => activeTab = \"cards\"">
+        <button class="tab @(activeTab == "cards" ? "active" : "")" @onclick="SetTabCards">
             📋 行程卡片
         </button>
-        <button class="tab @(activeTab == "week" ? "active" : "")" @onclick="() => activeTab = \"week\"">
+        <button class="tab @(activeTab == "week" ? "active" : "")" @onclick="SetTabWeek">
             📆 本週行程
         </button>
-        <button class="tab @(activeTab == "history" ? "active" : "")" @onclick="() => activeTab = \"history\"">
+        <button class="tab @(activeTab == "history" ? "active" : "")" @onclick="SetTabHistory">
             📜 歷史紀錄
         </button>
     </div>
@@ -100,6 +100,10 @@
     {
         editingEvent = null;
     }
+
+    private void SetTabCards() => activeTab = "cards";
+    private void SetTabWeek() => activeTab = "week";
+    private void SetTabHistory() => activeTab = "history";
 
     private async Task OnEventSaved()
     {
