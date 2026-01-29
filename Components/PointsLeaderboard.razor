@@ -1,0 +1,69 @@
+@inject IDataService DataService
+
+<div class="leaderboard-section">
+    <h2>🏆 積分排行榜</h2>
+
+    <div class="leaderboard">
+        @foreach (var member in memberPoints.OrderByDescending(m => m.Value))
+        {
+            var emoji = member.Key switch
+            {
+                "哥哥" => "👦",
+                "妹妹" => "👧",
+                "全家" => "👨‍👩‍👧‍👦",
+                _ => "👤"
+            };
+            var progress = Math.Min(100, (int)((double)member.Value / pointsGoal * 100));
+
+            <div class="leaderboard-item">
+                <div class="leaderboard-avatar">@emoji</div>
+                <div class="leaderboard-name">@member.Key</div>
+                <div class="leaderboard-points">@member.Value 分</div>
+                <div class="progress-bar" style="height: 12px;">
+                    <div class="progress-fill" style="width: @progress%"></div>
+                </div>
+                <div style="font-size: 0.875rem; color: #666; margin-top: 0.5rem;">
+                    目標 @pointsGoal 分
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private Dictionary<string, int> memberPoints = new()
+    {
+        { "哥哥", 0 },
+        { "妹妹", 0 },
+        { "全家", 0 }
+    };
+    private int pointsGoal = 50;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var settings = await DataService.GetSettingsAsync();
+        pointsGoal = settings.PointsGoal;
+
+        var history = await DataService.GetHistoryAsync();
+
+        memberPoints = new Dictionary<string, int>
+        {
+            { "哥哥", 0 },
+            { "妹妹", 0 },
+            { "全家", 0 }
+        };
+
+        foreach (var record in history)
+        {
+            if (memberPoints.ContainsKey(record.Member))
+            {
+                memberPoints[record.Member] += record.Points;
+            }
+        }
+    }
+}

@@ -1,0 +1,59 @@
+@inherits LayoutComponentBase
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<div class="page">
+    @if (!AuthService.IsAuthenticated)
+    {
+        <Login />
+    }
+    else
+    {
+        <header class="top-bar">
+            <h1>🏠 我們的彩色家庭白板</h1>
+            <button class="btn btn-sm" @onclick="Logout">登出</button>
+        </header>
+        <main class="container">
+            @Body
+        </main>
+    }
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthService.InitializeAsync();
+        AuthService.OnAuthStateChanged += StateHasChanged;
+    }
+
+    private async Task Logout()
+    {
+        await AuthService.LogoutAsync();
+    }
+
+    public void Dispose()
+    {
+        AuthService.OnAuthStateChanged -= StateHasChanged;
+    }
+}
+
+<style>
+    .page {
+        min-height: 100vh;
+    }
+
+    .top-bar {
+        background: linear-gradient(135deg, #e3f2fd, #fce4ec);
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .top-bar h1 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: #333;
+    }
+</style>

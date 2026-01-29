@@ -1,0 +1,77 @@
+@inject AuthService AuthService
+
+<div class="login-container">
+    <div class="login-box">
+        <h2>🔐 歡迎來到我們的秘密基地</h2>
+        <input type="password"
+               @bind="password"
+               @bind:event="oninput"
+               @onkeypress="HandleKeyPress"
+               placeholder="請輸入家庭暗號" />
+        <button class="btn btn-primary" @onclick="Login" disabled="@isLoading">
+            @if (isLoading)
+            {
+                <span>登入中...</span>
+            }
+            else
+            {
+                <span>登入白板</span>
+            }
+        </button>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <p class="error-message">@errorMessage</p>
+        }
+    </div>
+</div>
+
+@code {
+    private string password = "";
+    private string errorMessage = "";
+    private bool isLoading = false;
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await Login();
+        }
+    }
+
+    private async Task Login()
+    {
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            errorMessage = "請輸入暗號！";
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = "";
+
+        try
+        {
+            var success = await AuthService.LoginAsync(password);
+            if (!success)
+            {
+                errorMessage = "暗號不對喔，再想一次！";
+            }
+        }
+        catch
+        {
+            errorMessage = "連線錯誤，請稍後再試";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
+
+<style>
+    .error-message {
+        color: #f44336;
+        margin-top: 1rem;
+        font-size: 0.9rem;
+    }
+</style>

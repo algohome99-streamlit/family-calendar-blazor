@@ -1,0 +1,83 @@
+@inject IDataService DataService
+
+<div class="weekly-section">
+    <h2>📆 本週行程表</h2>
+
+    <div class="week-grid">
+        @foreach (var day in weekDays)
+        {
+            var isToday = day.Date == DateTime.Today;
+            var dayEvents = events.Where(e => e.Date.Date == day.Date).ToList();
+
+            <div class="week-day">
+                <div class="week-day-header @(isToday ? "today" : "")">
+                    <div>週@GetDayName(day.DayOfWeek)</div>
+                    <div>@day.ToString("MM/dd")</div>
+                </div>
+
+                @if (dayEvents.Any())
+                {
+                    @foreach (var evt in dayEvents)
+                    {
+                        <div class="week-event" style="background-color: @GetMemberColor(evt.Member)">
+                            @evt.GetIcon() @evt.Content
+                            @if (evt.IsRecurring)
+                            {
+                                <span>🔁</span>
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="week-event" style="color: #ccc; text-align: center;">---</div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<Event> Events { get; set; } = new();
+
+    private List<Event> events = new();
+    private List<DateTime> weekDays = new();
+
+    protected override void OnParametersSet()
+    {
+        events = Events;
+        CalculateWeekDays();
+    }
+
+    private void CalculateWeekDays()
+    {
+        var today = DateTime.Today;
+        var monday = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
+        if (today.DayOfWeek == DayOfWeek.Sunday)
+        {
+            monday = monday.AddDays(-7);
+        }
+
+        weekDays = Enumerable.Range(0, 7).Select(i => monday.AddDays(i)).ToList();
+    }
+
+    private string GetDayName(DayOfWeek day) => day switch
+    {
+        DayOfWeek.Monday => "一",
+        DayOfWeek.Tuesday => "二",
+        DayOfWeek.Wednesday => "三",
+        DayOfWeek.Thursday => "四",
+        DayOfWeek.Friday => "五",
+        DayOfWeek.Saturday => "六",
+        DayOfWeek.Sunday => "日",
+        _ => ""
+    };
+
+    private string GetMemberColor(string member) => member switch
+    {
+        "哥哥" => "#e3f2fd",
+        "妹妹" => "#fce4ec",
+        "全家" => "#fff9c4",
+        _ => "#f0f0f0"
+    };
+}

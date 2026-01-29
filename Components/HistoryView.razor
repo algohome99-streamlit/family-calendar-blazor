@@ -1,0 +1,48 @@
+@inject IDataService DataService
+
+<div class="history-section">
+    <h2>📜 歷史紀錄</h2>
+
+    @if (history.Any())
+    {
+        <div class="card">
+            <div class="history-list">
+                @foreach (var record in history.OrderByDescending(h => h.CompletedDate).Take(50))
+                {
+                    <div class="history-item">
+                        <div>
+                            <span>@record.GetIcon() @record.GetMemberEmoji()</span>
+                            <span style="margin-left: 0.5rem;">@record.Content</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <span style="color: #666; font-size: 0.875rem;">
+                                @record.CompletedDate.ToString("MM/dd")
+                            </span>
+                            <span style="color: #1976d2; font-weight: bold;">
+                                +@record.Points 分
+                            </span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <p>還沒有完成的紀錄喔！</p>
+    }
+</div>
+
+@code {
+    private List<HistoryRecord> history = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadHistory();
+    }
+
+    private async Task LoadHistory()
+    {
+        history = await DataService.GetHistoryAsync();
+    }
+}

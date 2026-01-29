@@ -1,0 +1,133 @@
+@inject IDataService DataService
+
+<div class="card">
+    <h3>@(IsEdit ? "✏️ 編輯行程" : "✨ 新增行程")</h3>
+    <div class="form-row">
+        <div class="form-group">
+            <label>日期</label>
+            <input type="date" class="form-control" @bind="formDate" />
+        </div>
+        <div class="form-group">
+            <label>成員</label>
+            <select class="form-control" @bind="formMember">
+                @foreach (var member in Event.Members)
+                {
+                    <option value="@member">@member</option>
+                }
+            </select>
+        </div>
+        <div class="form-group">
+            <label>類型</label>
+            <select class="form-control" @bind="formType">
+                @foreach (var type in Event.EventTypes)
+                {
+                    <option value="@type">@type</option>
+                }
+            </select>
+        </div>
+        <div class="form-group">
+            <label>每週重複</label>
+            <select class="form-control" @bind="formRecurring">
+                <option value="">否</option>
+                <option value="是">是</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>內容</label>
+        <input type="text" class="form-control" @bind="formContent" placeholder="輸入行程內容" />
+    </div>
+    <div class="card-actions">
+        <button class="btn btn-primary" @onclick="Submit" disabled="@isLoading">
+            @(IsEdit ? "更新" : "新增")
+        </button>
+        @if (IsEdit)
+        {
+            <button class="btn" @onclick="Cancel">取消</button>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public Event? EditingEvent { get; set; }
+    [Parameter] public EventCallback OnSaved { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private DateTime formDate = DateTime.Today;
+    private string formMember = "哥哥";
+    private string formType = "日常行程";
+    private string formContent = "";
+    private string formRecurring = "";
+    private bool isLoading = false;
+
+    private bool IsEdit => EditingEvent != null;
+
+    protected override void OnParametersSet()
+    {
+        if (EditingEvent != null)
+        {
+            formDate = EditingEvent.Date;
+            formMember = EditingEvent.Member;
+            formType = EditingEvent.Type;
+            formContent = EditingEvent.Content;
+            formRecurring = EditingEvent.Recurring;
+        }
+        else
+        {
+            ResetForm();
+        }
+    }
+
+    private void ResetForm()
+    {
+        formDate = DateTime.Today;
+        formMember = "哥哥";
+        formType = "日常行程";
+        formContent = "";
+        formRecurring = "";
+    }
+
+    private async Task Submit()
+    {
+        if (string.IsNullOrWhiteSpace(formContent))
+        {
+            return;
+        }
+
+        isLoading = true;
+        try
+        {
+            var evt = new Event
+            {
+                RowIndex = EditingEvent?.RowIndex ?? 0,
+                Date = formDate,
+                Member = formMember,
+                Type = formType,
+                Content = formContent,
+                Recurring = formRecurring
+            };
+
+            if (IsEdit)
+            {
+                await DataService.UpdateEventAsync(evt);
+            }
+            else
+            {
+                await DataService.AddEventAsync(evt);
+            }
+
+            ResetForm();
+            await OnSaved.InvokeAsync();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task Cancel()
+    {
+        ResetForm();
+        await OnCancel.InvokeAsync();
+    }
+}

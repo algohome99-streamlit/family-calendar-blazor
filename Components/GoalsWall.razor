@@ -1,0 +1,206 @@
+@inject IDataService DataService
+
+<div class="goals-section">
+    <h2>🎯 目標牆</h2>
+
+    @if (goals.Any())
+    {
+        <div class="goals-grid">
+            @foreach (var goal in goals.OrderBy(g => g.Deadline))
+            {
+                <div class="goal-card @goal.GetCardClass()">
+                    <div class="goal-header">
+                        <div>
+                            <span class="goal-title">@goal.GetMemberEmoji() @goal.GoalName</span>
+                            <div class="goal-deadline">截止：@goal.Deadline.ToString("yyyy/MM/dd")</div>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-success" @onclick="() => CompleteGoal(goal)">✅</button>
+                            <button class="btn btn-sm btn-warning" @onclick="() => EditGoal(goal)">✏️</button>
+                            <button class="btn btn-sm btn-danger" @onclick="() => DeleteGoal(goal)">🗑️</button>
+                        </div>
+                    </div>
+
+                    @foreach (var sub in goal.GetSubItems())
+                    {
+                        <div class="sub-item">
+                            <div class="sub-item-header">
+                                <span>@sub.Name</span>
+                                <span>@sub.Percent%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: @sub.Percent%"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <p>目前沒有設定目標喔！</p>
+    }
+
+    <div class="card" style="margin-top: 1rem;">
+        <h3>@(editingGoal != null ? "✏️ 編輯目標" : "➕ 新增目標")</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label>成員</label>
+                <select class="form-control" @bind="formMember">
+                    @foreach (var m in Event.Members)
+                    {
+                        <option value="@m">@m</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label>目標名稱</label>
+                <input type="text" class="form-control" @bind="formGoalName" />
+            </div>
+            <div class="form-group">
+                <label>截止日期</label>
+                <input type="date" class="form-control" @bind="formDeadline" />
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>子項目 1</label>
+                <input type="text" class="form-control" @bind="formSub1" />
+            </div>
+            <div class="form-group">
+                <label>進度 %</label>
+                <input type="number" class="form-control" @bind="formSub1Pct" min="0" max="100" />
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>子項目 2</label>
+                <input type="text" class="form-control" @bind="formSub2" />
+            </div>
+            <div class="form-group">
+                <label>進度 %</label>
+                <input type="number" class="form-control" @bind="formSub2Pct" min="0" max="100" />
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>子項目 3</label>
+                <input type="text" class="form-control" @bind="formSub3" />
+            </div>
+            <div class="form-group">
+                <label>進度 %</label>
+                <input type="number" class="form-control" @bind="formSub3Pct" min="0" max="100" />
+            </div>
+        </div>
+        <div class="card-actions">
+            <button class="btn btn-primary" @onclick="SaveGoal">@(editingGoal != null ? "更新" : "新增")</button>
+            @if (editingGoal != null)
+            {
+                <button class="btn" @onclick="CancelEdit">取消</button>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Goal> goals = new();
+    private Goal? editingGoal = null;
+
+    private string formMember = "哥哥";
+    private string formGoalName = "";
+    private DateTime formDeadline = DateTime.Today.AddMonths(1);
+    private string formSub1 = "";
+    private int formSub1Pct = 0;
+    private string formSub2 = "";
+    private int formSub2Pct = 0;
+    private string formSub3 = "";
+    private int formSub3Pct = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGoals();
+    }
+
+    private async Task LoadGoals()
+    {
+        goals = await DataService.GetGoalsAsync();
+    }
+
+    private void EditGoal(Goal goal)
+    {
+        editingGoal = goal;
+        formMember = goal.Member;
+        formGoalName = goal.GoalName;
+        formDeadline = goal.Deadline;
+        formSub1 = goal.Sub1;
+        formSub1Pct = goal.Sub1Pct;
+        formSub2 = goal.Sub2;
+        formSub2Pct = goal.Sub2Pct;
+        formSub3 = goal.Sub3;
+        formSub3Pct = goal.Sub3Pct;
+    }
+
+    private void CancelEdit()
+    {
+        editingGoal = null;
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        formMember = "哥哥";
+        formGoalName = "";
+        formDeadline = DateTime.Today.AddMonths(1);
+        formSub1 = "";
+        formSub1Pct = 0;
+        formSub2 = "";
+        formSub2Pct = 0;
+        formSub3 = "";
+        formSub3Pct = 0;
+    }
+
+    private async Task SaveGoal()
+    {
+        if (string.IsNullOrWhiteSpace(formGoalName)) return;
+
+        var goal = new Goal
+        {
+            RowIndex = editingGoal?.RowIndex ?? 0,
+            Member = formMember,
+            GoalName = formGoalName,
+            Deadline = formDeadline,
+            Sub1 = formSub1,
+            Sub1Pct = formSub1Pct,
+            Sub2 = formSub2,
+            Sub2Pct = formSub2Pct,
+            Sub3 = formSub3,
+            Sub3Pct = formSub3Pct
+        };
+
+        if (editingGoal != null)
+        {
+            await DataService.UpdateGoalAsync(goal);
+        }
+        else
+        {
+            await DataService.AddGoalAsync(goal);
+        }
+
+        editingGoal = null;
+        ResetForm();
+        await LoadGoals();
+    }
+
+    private async Task DeleteGoal(Goal goal)
+    {
+        await DataService.DeleteGoalAsync(goal.RowIndex);
+        await LoadGoals();
+    }
+
+    private async Task CompleteGoal(Goal goal)
+    {
+        await DataService.CompleteGoalAsync(goal);
+        await LoadGoals();
+    }
+}

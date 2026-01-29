@@ -1,0 +1,89 @@
+@inject IDataService DataService
+
+<div class="card @Event.GetCardClass()">
+    <div class="card-header">
+        <span class="card-title">
+            @Event.GetIcon() @Event.Content
+            @if (Event.IsRecurring)
+            {
+                <span class="recurring-badge">🔁 每週</span>
+            }
+        </span>
+        <span class="card-date">@Event.Date.ToString("MM/dd")</span>
+    </div>
+    <div class="card-content">
+        <span>@Event.GetMemberEmoji() @Event.Member</span>
+        <span style="margin-left: 1rem; color: #666;">@Event.Type</span>
+    </div>
+    <div class="card-actions">
+        @if (DateTime.Today >= Event.Date.Date && !Event.IsDone)
+        {
+            <button class="btn btn-success btn-sm" @onclick="Complete" disabled="@isLoading">
+                ✅ 完成
+            </button>
+        }
+        <button class="btn btn-warning btn-sm" @onclick="Edit">
+            ✏️ 編輯
+        </button>
+        <button class="btn btn-danger btn-sm" @onclick="() => showDeleteConfirm = true">
+            🗑️ 刪除
+        </button>
+    </div>
+</div>
+
+@if (showDeleteConfirm)
+{
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-title">確定要刪除嗎？</div>
+            <p>「@Event.Content」將會被刪除</p>
+            <div class="modal-actions">
+                <button class="btn" @onclick="() => showDeleteConfirm = false">取消</button>
+                <button class="btn btn-danger" @onclick="Delete" disabled="@isLoading">確定刪除</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Event Event { get; set; } = null!;
+    [Parameter] public EventCallback OnEdit { get; set; }
+    [Parameter] public EventCallback OnRefresh { get; set; }
+
+    private bool showDeleteConfirm = false;
+    private bool isLoading = false;
+
+    private async Task Complete()
+    {
+        isLoading = true;
+        try
+        {
+            await DataService.CompleteEventAsync(Event);
+            await OnRefresh.InvokeAsync();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task Edit()
+    {
+        await OnEdit.InvokeAsync();
+    }
+
+    private async Task Delete()
+    {
+        isLoading = true;
+        try
+        {
+            await DataService.DeleteEventAsync(Event.RowIndex);
+            showDeleteConfirm = false;
+            await OnRefresh.InvokeAsync();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

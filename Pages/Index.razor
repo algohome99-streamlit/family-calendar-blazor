@@ -1,0 +1,127 @@
+@page "/"
+@inject IDataService DataService
+
+<div class="main-content">
+    <!-- 目標牆 -->
+    <GoalsWall />
+
+    <!-- 新增/編輯行程表單 -->
+    <EventForm EditingEvent="@editingEvent" OnSaved="OnEventSaved" OnCancel="CancelEdit" />
+
+    <!-- 頁籤 -->
+    <div class="tabs">
+        <button class="tab @(activeTab == "cards" ? "active" : "")" @onclick="() => activeTab = \"cards\"">
+            📋 行程卡片
+        </button>
+        <button class="tab @(activeTab == "week" ? "active" : "")" @onclick="() => activeTab = \"week\"">
+            📆 本週行程
+        </button>
+        <button class="tab @(activeTab == "history" ? "active" : "")" @onclick="() => activeTab = \"history\"">
+            📜 歷史紀錄
+        </button>
+    </div>
+
+    <!-- 行程卡片視圖 -->
+    @if (activeTab == "cards")
+    {
+        <h2>📅 近期行程總覽</h2>
+        @if (isLoading)
+        {
+            <p>載入中...</p>
+        }
+        else if (!futureEvents.Any())
+        {
+            <p>目前沒有未來的行程喔！</p>
+        }
+        else
+        {
+            <div class="events-grid">
+                @foreach (var evt in futureEvents)
+                {
+                    <EventCard Event="@evt"
+                               OnEdit="() => StartEdit(evt)"
+                               OnRefresh="LoadEvents" />
+                }
+            </div>
+        }
+    }
+
+    <!-- 本週行程視圖 -->
+    @if (activeTab == "week")
+    {
+        <WeeklyView Events="@events" />
+    }
+
+    <!-- 歷史紀錄視圖 -->
+    @if (activeTab == "history")
+    {
+        <HistoryView />
+    }
+
+    <!-- 積分排行榜 -->
+    <PointsLeaderboard />
+</div>
+
+@code {
+    private List<Event> events = new();
+    private List<Event> futureEvents = new();
+    private Event? editingEvent = null;
+    private string activeTab = "cards";
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEvents();
+    }
+
+    private async Task LoadEvents()
+    {
+        isLoading = true;
+        try
+        {
+            events = await DataService.GetEventsAsync();
+            futureEvents = events
+                .Where(e => e.Date.Date >= DateTime.Today)
+                .OrderBy(e => e.Date)
+                .ToList();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void StartEdit(Event evt)
+    {
+        editingEvent = evt;
+    }
+
+    private void CancelEdit()
+    {
+        editingEvent = null;
+    }
+
+    private async Task OnEventSaved()
+    {
+        editingEvent = null;
+        await LoadEvents();
+    }
+}
+
+<style>
+    .main-content {
+        padding-bottom: 2rem;
+    }
+
+    .events-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+
+    @@media (max-width: 768px) {
+        .events-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
