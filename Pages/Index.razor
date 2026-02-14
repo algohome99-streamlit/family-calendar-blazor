@@ -71,6 +71,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await DataService.CleanupExpiredEventsAsync();
         await LoadEvents();
     }
 

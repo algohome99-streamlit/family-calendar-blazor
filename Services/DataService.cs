@@ -63,6 +63,11 @@ public class DataService : IDataService
         await _httpClient.GetAsync(url);
     }
 
+    public async Task CleanupExpiredEventsAsync()
+    {
+        await _httpClient.GetAsync($"{_gasUrl}?action=cleanupExpiredEvents");
+    }
+
     // === Goals ===
     public async Task<List<Goal>> GetGoalsAsync()
     {

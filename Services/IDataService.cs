@@ -10,6 +10,7 @@ public interface IDataService
     Task UpdateEventAsync(Event evt);
     Task DeleteEventAsync(int rowIndex);
     Task CompleteEventAsync(Event evt);
+    Task CleanupExpiredEventsAsync();
 
     // Goals
     Task<List<Goal>> GetGoalsAsync();
