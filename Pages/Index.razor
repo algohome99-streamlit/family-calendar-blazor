@@ -130,31 +130,7 @@
         gap: 1rem;
     }
 
-    .month-separator {
-        display: flex;
-        align-items: center;
-        margin: 1.5rem 0 0.75rem;
-    }
-
-    .month-separator::before,
-    .month-separator::after {
-        content: "";
-        flex: 1;
-        height: 1px;
-        background: #ccc;
-    }
-
-    .month-label {
-        padding: 0.2rem 0.8rem;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #666;
-        background: #f0f0f0;
-        border-radius: 12px;
-        white-space: nowrap;
-    }
-
-    @@media (max-width: 768px) {
+@@media (max-width: 768px) {
         .events-grid {
             grid-template-columns: 1fr;
         }
