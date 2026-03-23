@@ -35,14 +35,20 @@
         }
         else
         {
-            <div class="events-grid">
-                @foreach (var evt in futureEvents)
-                {
-                    <EventCard Event="@evt"
-                               OnEdit="() => StartEdit(evt)"
-                               OnRefresh="LoadEvents" />
-                }
-            </div>
+            @foreach (var monthGroup in futureEvents.GroupBy(e => new { e.Date.Year, e.Date.Month }))
+            {
+                <div class="month-separator">
+                    <span class="month-label">@monthGroup.First().Date.ToString("yyyy 年 M 月")</span>
+                </div>
+                <div class="events-grid">
+                    @foreach (var evt in monthGroup)
+                    {
+                        <EventCard Event="@evt"
+                                   OnEdit="() => StartEdit(evt)"
+                                   OnRefresh="LoadEvents" />
+                    }
+                </div>
+            }
         }
     }
 
@@ -122,6 +128,30 @@
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 1rem;
+    }
+
+    .month-separator {
+        display: flex;
+        align-items: center;
+        margin: 1.5rem 0 0.75rem;
+    }
+
+    .month-separator::before,
+    .month-separator::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: #ccc;
+    }
+
+    .month-label {
+        padding: 0.2rem 0.8rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #666;
+        background: #f0f0f0;
+        border-radius: 12px;
+        white-space: nowrap;
     }
 
     @@media (max-width: 768px) {
