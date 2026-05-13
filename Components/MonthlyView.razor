@@ -4,33 +4,34 @@
     <h2>📆 @monthLabel 本月行程</h2>
 
     <div class="month-grid">
-        <div class="month-row month-row-header">
+        <div class="month-row">
             @foreach (var name in dayNames)
             {
-                <div class="month-cell month-cell-header">@name</div>
+                <div class="month-weekday-label">@name</div>
             }
         </div>
         @foreach (var week in weeks)
         {
+            var isPastWeek = week.Last().Date < DateTime.Today;
             <div class="month-row">
                 @foreach (var day in week)
                 {
                     var inMonth = day.Month == currentMonth.Month;
                     var isToday = day.Date == DateTime.Today;
-                    var dayEvents = inMonth
+                    var dayEvents = (!isPastWeek && inMonth)
                         ? Events.Where(e => e.Date.Date == day.Date).ToList()
                         : new List<Event>();
 
-                    <div class="month-cell @(inMonth ? "" : "out-of-month") @(isToday ? "today" : "") @(dayEvents.Any() ? "has-events" : "")"
+                    <div class="month-cell @(inMonth ? "" : "out-of-month") @(isToday ? "today" : "") @(dayEvents.Any() ? "has-events" : "") @(isPastWeek ? "past-week" : "")"
                          @onclick="() => HandleDayClick(day, dayEvents.Any())">
                         <div class="month-cell-date">@day.Day</div>
-                        @if (inMonth && dayEvents.Any())
+                        @if (dayEvents.Any())
                         {
                             <div class="month-cell-events">
                                 @foreach (var evt in dayEvents.Take(3))
                                 {
                                     <div class="month-event-chip" title="@evt.Content">
-                                        <span>@evt.GetIcon()</span><span class="chip-text">@TypeShort(evt.Type)</span>
+                                        <span>@evt.GetMemberEmoji()@MemberShort(evt.Member)</span><span class="chip-type">&lt;@TypeShort(evt.Type)&gt;</span>
                                     </div>
                                 }
                                 @if (dayEvents.Count > 3)
@@ -66,11 +67,9 @@
         var first = currentMonth;
         var last = first.AddMonths(1).AddDays(-1);
 
-        // 從本月 1 號所在週的週一開始
-        var offset = ((int)first.DayOfWeek + 6) % 7; // 週一=0, 週日=6
+        var offset = ((int)first.DayOfWeek + 6) % 7;
         var start = first.AddDays(-offset);
 
-        // 到月底所在週的週日結束
         var endOffset = (7 - ((int)last.DayOfWeek + 6) % 7 - 1) % 7;
         var end = last.AddDays(endOffset);
 
@@ -79,6 +78,12 @@
         {
             weeks.Add(Enumerable.Range(0, 7).Select(i => d.AddDays(i)).ToList());
         }
+    }
+
+    private string MemberShort(string member)
+    {
+        if (string.IsNullOrEmpty(member)) return "";
+        return member.Length <= 2 ? member : member.Substring(0, 2);
     }
 
     private string TypeShort(string type)
