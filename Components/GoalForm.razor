@@ -1,0 +1,161 @@
+@using FamilyCalendar.Blazor.Models
+@inject IDataService DataService
+
+<div class="card">
+    <div class="card-header-collapsible" @onclick="ToggleFormExpand">
+        <h3>@(EditingGoal != null ? "✏️ 編輯目標" : "➕ 新增目標")</h3>
+        <span class="collapse-icon">@(isFormExpanded ? "▼" : "▶")</span>
+    </div>
+
+    @if (isFormExpanded)
+    {
+        <div class="form-row">
+            <div class="form-group">
+                <label>成員</label>
+                <select class="form-control" @bind="formMember">
+                    @foreach (var m in Event.Members)
+                    {
+                        <option value="@m">@m</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label>目標名稱</label>
+                <input type="text" class="form-control" @bind="formGoalName" />
+            </div>
+            <div class="form-group">
+                <label>截止日期</label>
+                <input type="date" class="form-control" @bind="formDeadline" />
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>子項目 1</label>
+                <input type="text" class="form-control" @bind="formSub1" />
+            </div>
+            <div class="form-group">
+                <label>進度 %</label>
+                <input type="number" class="form-control" @bind="formSub1Pct" min="0" max="100" />
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>子項目 2</label>
+                <input type="text" class="form-control" @bind="formSub2" />
+            </div>
+            <div class="form-group">
+                <label>進度 %</label>
+                <input type="number" class="form-control" @bind="formSub2Pct" min="0" max="100" />
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>子項目 3</label>
+                <input type="text" class="form-control" @bind="formSub3" />
+            </div>
+            <div class="form-group">
+                <label>進度 %</label>
+                <input type="number" class="form-control" @bind="formSub3Pct" min="0" max="100" />
+            </div>
+        </div>
+        <div class="card-actions">
+            <button class="btn btn-primary" @onclick="SaveGoal">@(EditingGoal != null ? "更新" : "新增")</button>
+            @if (EditingGoal != null)
+            {
+                <button class="btn" @onclick="HandleCancel">取消</button>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Goal? EditingGoal { get; set; }
+    [Parameter] public EventCallback OnSaved { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private bool isFormExpanded = false;
+    private Goal? lastEditingGoal;
+
+    private string formMember = "哥哥";
+    private string formGoalName = "";
+    private DateTime formDeadline = DateTime.Today.AddMonths(1);
+    private string formSub1 = "";
+    private int formSub1Pct = 0;
+    private string formSub2 = "";
+    private int formSub2Pct = 0;
+    private string formSub3 = "";
+    private int formSub3Pct = 0;
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(EditingGoal, lastEditingGoal))
+        {
+            lastEditingGoal = EditingGoal;
+            if (EditingGoal != null)
+            {
+                formMember = EditingGoal.Member;
+                formGoalName = EditingGoal.GoalName;
+                formDeadline = EditingGoal.Deadline;
+                formSub1 = EditingGoal.Sub1;
+                formSub1Pct = EditingGoal.Sub1Pct;
+                formSub2 = EditingGoal.Sub2;
+                formSub2Pct = EditingGoal.Sub2Pct;
+                formSub3 = EditingGoal.Sub3;
+                formSub3Pct = EditingGoal.Sub3Pct;
+                isFormExpanded = true;
+            }
+        }
+    }
+
+    private void ToggleFormExpand() => isFormExpanded = !isFormExpanded;
+
+    private void ResetForm()
+    {
+        formMember = "哥哥";
+        formGoalName = "";
+        formDeadline = DateTime.Today.AddMonths(1);
+        formSub1 = "";
+        formSub1Pct = 0;
+        formSub2 = "";
+        formSub2Pct = 0;
+        formSub3 = "";
+        formSub3Pct = 0;
+    }
+
+    private async Task HandleCancel()
+    {
+        ResetForm();
+        if (OnCancel.HasDelegate) await OnCancel.InvokeAsync();
+    }
+
+    private async Task SaveGoal()
+    {
+        if (string.IsNullOrWhiteSpace(formGoalName)) return;
+
+        var goal = new Goal
+        {
+            RowIndex = EditingGoal?.RowIndex ?? 0,
+            Member = formMember,
+            GoalName = formGoalName,
+            Deadline = formDeadline,
+            Sub1 = formSub1,
+            Sub1Pct = formSub1Pct,
+            Sub2 = formSub2,
+            Sub2Pct = formSub2Pct,
+            Sub3 = formSub3,
+            Sub3Pct = formSub3Pct
+        };
+
+        if (EditingGoal != null)
+        {
+            await DataService.UpdateGoalAsync(goal);
+        }
+        else
+        {
+            await DataService.AddGoalAsync(goal);
+        }
+
+        ResetForm();
+        if (OnSaved.HasDelegate) await OnSaved.InvokeAsync();
+    }
+}
