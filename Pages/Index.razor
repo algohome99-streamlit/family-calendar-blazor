@@ -1,25 +1,26 @@
 @page "/"
 @inject IDataService DataService
+@inject IJSRuntime JS
 
 <div class="main-content">
-    <!-- 目標牆 -->
-    <GoalsWall />
-
-    <!-- 新增/編輯行程表單 -->
-    <EventForm EditingEvent="@editingEvent" OnSaved="OnEventSaved" OnCancel="CancelEdit" />
-
     <!-- 頁籤 -->
     <div class="tabs">
+        <button class="tab @(activeTab == "month" ? "active" : "")" @onclick="SetTabMonth">
+            📆 本月行程
+        </button>
         <button class="tab @(activeTab == "cards" ? "active" : "")" @onclick="SetTabCards">
             📋 行程卡片
-        </button>
-        <button class="tab @(activeTab == "week" ? "active" : "")" @onclick="SetTabWeek">
-            📆 本週行程
         </button>
         <button class="tab @(activeTab == "history" ? "active" : "")" @onclick="SetTabHistory">
             📜 歷史紀錄
         </button>
     </div>
+
+    <!-- 本月行程視圖 -->
+    @if (activeTab == "month")
+    {
+        <MonthlyView Events="@events" OnDayClick="JumpToCards" />
+    }
 
     <!-- 行程卡片視圖 -->
     @if (activeTab == "cards")
@@ -43,19 +44,15 @@
                 <div class="events-grid">
                     @foreach (var evt in monthGroup)
                     {
-                        <EventCard Event="@evt"
-                                   OnEdit="() => StartEdit(evt)"
-                                   OnRefresh="LoadEvents" />
+                        <div id="@($"event-day-{evt.Date:yyyyMMdd}")">
+                            <EventCard Event="@evt"
+                                       OnEdit="() => StartEdit(evt)"
+                                       OnRefresh="LoadEvents" />
+                        </div>
                     }
                 </div>
             }
         }
-    }
-
-    <!-- 本週行程視圖 -->
-    @if (activeTab == "week")
-    {
-        <WeeklyView Events="@events" />
     }
 
     <!-- 歷史紀錄視圖 -->
@@ -63,6 +60,15 @@
     {
         <HistoryView />
     }
+
+    <!-- 目標牆 -->
+    <GoalsWall @ref="goalsWallRef" OnEdit="StartEditGoal" />
+
+    <!-- 新增/編輯行程表單 -->
+    <EventForm EditingEvent="@editingEvent" OnSaved="OnEventSaved" OnCancel="CancelEdit" />
+
+    <!-- 新增/編輯目標表單 -->
+    <GoalForm EditingGoal="@editingGoal" OnSaved="OnGoalSaved" OnCancel="CancelEditGoal" />
 
     <!-- 積分排行榜 -->
     <PointsLeaderboard />
@@ -72,8 +78,11 @@
     private List<Event> events = new();
     private List<Event> futureEvents = new();
     private Event? editingEvent = null;
-    private string activeTab = "cards";
+    private Goal? editingGoal = null;
+    private GoalsWall? goalsWallRef;
+    private string activeTab = "month";
     private bool isLoading = true;
+    private string? pendingScrollAnchor;
 
     protected override async Task OnInitializedAsync()
     {
@@ -108,9 +117,41 @@
         editingEvent = null;
     }
 
+    private void StartEditGoal(Goal goal)
+    {
+        editingGoal = goal;
+    }
+
+    private void CancelEditGoal()
+    {
+        editingGoal = null;
+    }
+
+    private async Task OnGoalSaved()
+    {
+        editingGoal = null;
+        if (goalsWallRef != null) await goalsWallRef.RefreshAsync();
+    }
+
+    private void SetTabMonth() => activeTab = "month";
     private void SetTabCards() => activeTab = "cards";
-    private void SetTabWeek() => activeTab = "week";
     private void SetTabHistory() => activeTab = "history";
+
+    private void JumpToCards(DateTime day)
+    {
+        activeTab = "cards";
+        pendingScrollAnchor = $"event-day-{day:yyyyMMdd}";
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (pendingScrollAnchor != null && activeTab == "cards")
+        {
+            var anchor = pendingScrollAnchor;
+            pendingScrollAnchor = null;
+            await JS.InvokeVoidAsync("scrollToElement", anchor);
+        }
+    }
 
     private async Task OnEventSaved()
     {

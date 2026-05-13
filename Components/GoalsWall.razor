@@ -1,3 +1,4 @@
+@using FamilyCalendar.Blazor.Models
 @inject IDataService DataService
 
 <div class="goals-section">
@@ -16,7 +17,7 @@
                         </div>
                         <div>
                             <button class="btn btn-sm btn-success" @onclick="() => CompleteGoal(goal)">✅</button>
-                            <button class="btn btn-sm btn-warning" @onclick="() => EditGoal(goal)">✏️</button>
+                            <button class="btn btn-sm btn-warning" @onclick="() => HandleEdit(goal)">✏️</button>
                             <button class="btn btn-sm btn-danger" @onclick="() => DeleteGoal(goal)">🗑️</button>
                         </div>
                     </div>
@@ -41,115 +42,22 @@
     {
         <p>目前沒有設定目標喔！</p>
     }
-
-    <div class="card" style="margin-top: 1rem;">
-        <div class="card-header-collapsible" @onclick="ToggleFormExpand">
-            <h3>@(editingGoal != null ? "✏️ 編輯目標" : "➕ 新增目標")</h3>
-            <span class="collapse-icon">@(isFormExpanded ? "▼" : "▶")</span>
-        </div>
-
-        @if (isFormExpanded)
-        {
-        <div class="form-row">
-            <div class="form-group">
-                <label>成員</label>
-                <select class="form-control" @bind="formMember">
-                    @foreach (var m in Event.Members)
-                    {
-                        <option value="@m">@m</option>
-                    }
-                </select>
-            </div>
-            <div class="form-group">
-                <label>目標名稱</label>
-                <input type="text" class="form-control" @bind="formGoalName" />
-            </div>
-            <div class="form-group">
-                <label>截止日期</label>
-                <input type="date" class="form-control" @bind="formDeadline" />
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>子項目 1</label>
-                <input type="text" class="form-control" @bind="formSub1" />
-            </div>
-            <div class="form-group">
-                <label>進度 %</label>
-                <input type="number" class="form-control" @bind="formSub1Pct" min="0" max="100" />
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>子項目 2</label>
-                <input type="text" class="form-control" @bind="formSub2" />
-            </div>
-            <div class="form-group">
-                <label>進度 %</label>
-                <input type="number" class="form-control" @bind="formSub2Pct" min="0" max="100" />
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>子項目 3</label>
-                <input type="text" class="form-control" @bind="formSub3" />
-            </div>
-            <div class="form-group">
-                <label>進度 %</label>
-                <input type="number" class="form-control" @bind="formSub3Pct" min="0" max="100" />
-            </div>
-        </div>
-        <div class="card-actions">
-            <button class="btn btn-primary" @onclick="SaveGoal">@(editingGoal != null ? "更新" : "新增")</button>
-            @if (editingGoal != null)
-            {
-                <button class="btn" @onclick="CancelEdit">取消</button>
-            }
-        </div>
-        }
-    </div>
 </div>
 
-<style>
-    .card-header-collapsible {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        cursor: pointer;
-        padding: 0.5rem 0;
-    }
-    .card-header-collapsible:hover {
-        opacity: 0.8;
-    }
-    .card-header-collapsible h3 {
-        margin: 0;
-    }
-    .collapse-icon {
-        font-size: 0.9rem;
-        color: #666;
-    }
-</style>
-
 @code {
+    [Parameter] public EventCallback<Goal> OnEdit { get; set; }
+
     private List<Goal> goals = new();
-    private Goal? editingGoal = null;
-    private bool isFormExpanded = false;
-
-    private void ToggleFormExpand() => isFormExpanded = !isFormExpanded;
-
-    private string formMember = "哥哥";
-    private string formGoalName = "";
-    private DateTime formDeadline = DateTime.Today.AddMonths(1);
-    private string formSub1 = "";
-    private int formSub1Pct = 0;
-    private string formSub2 = "";
-    private int formSub2Pct = 0;
-    private string formSub3 = "";
-    private int formSub3Pct = 0;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadGoals();
+    }
+
+    public async Task RefreshAsync()
+    {
+        await LoadGoals();
+        StateHasChanged();
     }
 
     private async Task LoadGoals()
@@ -157,70 +65,9 @@
         goals = await DataService.GetGoalsAsync();
     }
 
-    private void EditGoal(Goal goal)
+    private async Task HandleEdit(Goal goal)
     {
-        editingGoal = goal;
-        formMember = goal.Member;
-        formGoalName = goal.GoalName;
-        formDeadline = goal.Deadline;
-        formSub1 = goal.Sub1;
-        formSub1Pct = goal.Sub1Pct;
-        formSub2 = goal.Sub2;
-        formSub2Pct = goal.Sub2Pct;
-        formSub3 = goal.Sub3;
-        formSub3Pct = goal.Sub3Pct;
-        isFormExpanded = true; // 編輯時自動展開
-    }
-
-    private void CancelEdit()
-    {
-        editingGoal = null;
-        ResetForm();
-    }
-
-    private void ResetForm()
-    {
-        formMember = "哥哥";
-        formGoalName = "";
-        formDeadline = DateTime.Today.AddMonths(1);
-        formSub1 = "";
-        formSub1Pct = 0;
-        formSub2 = "";
-        formSub2Pct = 0;
-        formSub3 = "";
-        formSub3Pct = 0;
-    }
-
-    private async Task SaveGoal()
-    {
-        if (string.IsNullOrWhiteSpace(formGoalName)) return;
-
-        var goal = new Goal
-        {
-            RowIndex = editingGoal?.RowIndex ?? 0,
-            Member = formMember,
-            GoalName = formGoalName,
-            Deadline = formDeadline,
-            Sub1 = formSub1,
-            Sub1Pct = formSub1Pct,
-            Sub2 = formSub2,
-            Sub2Pct = formSub2Pct,
-            Sub3 = formSub3,
-            Sub3Pct = formSub3Pct
-        };
-
-        if (editingGoal != null)
-        {
-            await DataService.UpdateGoalAsync(goal);
-        }
-        else
-        {
-            await DataService.AddGoalAsync(goal);
-        }
-
-        editingGoal = null;
-        ResetForm();
-        await LoadGoals();
+        if (OnEdit.HasDelegate) await OnEdit.InvokeAsync(goal);
     }
 
     private async Task DeleteGoal(Goal goal)

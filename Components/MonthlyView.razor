@@ -1,0 +1,97 @@
+@using FamilyCalendar.Blazor.Models
+
+<div class="monthly-section">
+    <h2>📆 @monthLabel 本月行程</h2>
+
+    <div class="month-grid">
+        <div class="month-row month-row-header">
+            @foreach (var name in dayNames)
+            {
+                <div class="month-cell month-cell-header">@name</div>
+            }
+        </div>
+        @foreach (var week in weeks)
+        {
+            <div class="month-row">
+                @foreach (var day in week)
+                {
+                    var inMonth = day.Month == currentMonth.Month;
+                    var isToday = day.Date == DateTime.Today;
+                    var dayEvents = inMonth
+                        ? Events.Where(e => e.Date.Date == day.Date).ToList()
+                        : new List<Event>();
+
+                    <div class="month-cell @(inMonth ? "" : "out-of-month") @(isToday ? "today" : "") @(dayEvents.Any() ? "has-events" : "")"
+                         @onclick="() => HandleDayClick(day, dayEvents.Any())">
+                        <div class="month-cell-date">@day.Day</div>
+                        @if (inMonth && dayEvents.Any())
+                        {
+                            <div class="month-cell-events">
+                                @foreach (var evt in dayEvents.Take(3))
+                                {
+                                    <div class="month-event-chip" title="@evt.Content">
+                                        <span>@evt.GetIcon()</span><span class="chip-text">@TypeShort(evt.Type)</span>
+                                    </div>
+                                }
+                                @if (dayEvents.Count > 3)
+                                {
+                                    <div class="month-event-more">+@(dayEvents.Count - 3)</div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<Event> Events { get; set; } = new();
+    [Parameter] public EventCallback<DateTime> OnDayClick { get; set; }
+
+    private DateTime currentMonth = new(DateTime.Today.Year, DateTime.Today.Month, 1);
+    private List<List<DateTime>> weeks = new();
+    private string monthLabel = "";
+    private readonly string[] dayNames = { "一", "二", "三", "四", "五", "六", "日" };
+
+    protected override void OnInitialized()
+    {
+        BuildWeeks();
+    }
+
+    private void BuildWeeks()
+    {
+        monthLabel = currentMonth.ToString("yyyy 年 M 月");
+        var first = currentMonth;
+        var last = first.AddMonths(1).AddDays(-1);
+
+        // 從本月 1 號所在週的週一開始
+        var offset = ((int)first.DayOfWeek + 6) % 7; // 週一=0, 週日=6
+        var start = first.AddDays(-offset);
+
+        // 到月底所在週的週日結束
+        var endOffset = (7 - ((int)last.DayOfWeek + 6) % 7 - 1) % 7;
+        var end = last.AddDays(endOffset);
+
+        weeks = new();
+        for (var d = start; d <= end; d = d.AddDays(7))
+        {
+            weeks.Add(Enumerable.Range(0, 7).Select(i => d.AddDays(i)).ToList());
+        }
+    }
+
+    private string TypeShort(string type)
+    {
+        if (string.IsNullOrEmpty(type)) return "";
+        return type.Length <= 2 ? type : type.Substring(0, 2);
+    }
+
+    private async Task HandleDayClick(DateTime day, bool hasEvents)
+    {
+        if (hasEvents && OnDayClick.HasDelegate)
+        {
+            await OnDayClick.InvokeAsync(day);
+        }
+    }
+}
