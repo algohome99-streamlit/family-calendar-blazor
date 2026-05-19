@@ -30,7 +30,7 @@
                             <div class="month-cell-events">
                                 @foreach (var evt in dayEvents.Take(3))
                                 {
-                                    <div class="month-event-chip" title="@evt.Content">
+                                    <div class="month-event-chip chip-@MemberKey(evt.Member)" title="@evt.Content">
                                         <span>@evt.GetMemberEmoji()@MemberShort(evt.Member)</span><span class="chip-type">&lt;@TypeShort(evt.Type)&gt;</span>
                                     </div>
                                 }
@@ -85,6 +85,14 @@
         if (string.IsNullOrEmpty(member)) return "";
         return member.Length <= 2 ? member : member.Substring(0, 2);
     }
+
+    private string MemberKey(string member) => member switch
+    {
+        "哥哥" => "bro",
+        "妹妹" => "sis",
+        "全家" => "family",
+        _ => "other"
+    };
 
     private string TypeShort(string type)
     {

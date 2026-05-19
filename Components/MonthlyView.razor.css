@@ -88,6 +88,28 @@
     overflow: hidden;
 }
 
+.month-event-chip.chip-bro {
+    background: #dbeafe;
+    color: #1e3a8a;
+}
+
+.month-event-chip.chip-sis {
+    background: #ffedd5;
+    color: #9a3412;
+}
+
+.month-event-chip.chip-family {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+.month-event-chip.chip-bro .chip-type,
+.month-event-chip.chip-sis .chip-type,
+.month-event-chip.chip-family .chip-type {
+    color: inherit;
+    opacity: 0.75;
+}
+
 .chip-text {
     white-space: nowrap;
     overflow: hidden;
